@@ -1,0 +1,23 @@
+baseURL = "/"
+languageCode = "zh-cn"
+title = "乌乌和玄玄"
+paginate = 12
+enableRobotsTXT = true
+
+[params]
+  home_title = "乌乌和玄玄 - 文学书单与图书笔记"
+  description = "什么样的文学能把人从情绪里拉回现实？乌乌和玄玄用主题书单与图书笔记，记录那些让人更清醒、更能继续生活的阅读。"
+  default_og_image = ""
+
+[taxonomies]
+  tag = "tags"
+
+[outputs]
+home = ["HTML", "RSS", "JSON", "SEED"]
+
+[outputFormats]
+  [outputFormats.SEED]
+    mediaType = "application/json"
+    baseName = "seed"
+    isPlainText = true
+    notAlternative = true

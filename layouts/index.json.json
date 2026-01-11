@@ -1,0 +1,52 @@
+{{- /* 生成全站搜索索引：书籍 + 书单（稳定版，兼容性最高） */ -}}
+{{- $pages := where .Site.RegularPages "Section" "in" (slice "books" "lists") -}}
+{{- $out := slice -}}
+
+{{- range $p := $pages -}}
+
+  {{- /* author：取值 + 去首尾空白 + 清理占位符 */ -}}
+  {{- $author := or $p.Params.author "" -}}
+  {{- $author = replaceRE "(^\\s+|\\s+$)" "" $author -}}
+  {{- $authorLower := lower $author -}}
+  {{- if or (eq $author "?") (eq $author "未知") (eq $authorLower "n/a") (eq $authorLower "na") (eq $authorLower "null") -}}
+    {{- $author = "" -}}
+  {{- end -}}
+
+  {{- /* date：优先 Date，其次 Lastmod */ -}}
+  {{- $date := "" -}}
+  {{- with $p.Date -}}
+    {{- $date = .Format "2006-01-02" -}}
+  {{- else -}}
+    {{- with $p.Lastmod -}}
+      {{- $date = .Format "2006-01-02" -}}
+    {{- end -}}
+  {{- end -}}
+
+  {{- /* summary：纯文本 + 收敛空白 + 去首尾空白 */ -}}
+  {{- $summary := or $p.Params.summary ($p.Summary | plainify) "" -}}
+  {{- $summary = replaceRE "\\s+" " " $summary -}}
+  {{- $summary = replaceRE "(^\\s+|\\s+$)" "" $summary -}}
+
+  {{- /* content：纯文本 + 收敛空白 + 去首尾空白 + 截断 */ -}}
+  {{- $content := $p.Plain -}}
+  {{- $content = replaceRE "\\s+" " " $content -}}
+  {{- $content = replaceRE "(^\\s+|\\s+$)" "" $content -}}
+  {{- $content = truncate 600 $content -}}
+
+  {{- $item := dict
+    "title" $p.Title
+    "url" $p.RelPermalink
+    "section" $p.Section
+    "date" $date
+    "summary" $summary
+    "tags" (or $p.Params.tags (slice))
+    "categories" (or $p.Params.categories (slice))
+    "author" $author
+    "cover" (or $p.Params.cover "")
+    "content" $content
+  -}}
+  {{- $out = $out | append $item -}}
+
+{{- end -}}
+
+{{- $out | jsonify -}}

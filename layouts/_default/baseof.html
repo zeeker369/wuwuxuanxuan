@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+  {{- $brand := site.Title -}}
+  {{- $t := .Title -}}
+
+  {{- /* 书单详情页：/lists/xxx/ */ -}}
+  {{- if and (eq .Section "lists") (eq .Kind "page") -}}
+    {{- $n := 0 -}}
+    {{- with .Params.books -}}
+      {{- $n = len . -}}
+    {{- end -}}
+    {{- if gt $n 0 -}}
+      {{- $t = printf "%s：%d本书单" .Title $n -}}
+    {{- else -}}
+      {{- $t = printf "%s：书单" .Title -}}
+    {{- end -}}
+  {{- end -}}
+
+  <title>{{- if .IsHome -}}
+    {{- with site.Params.home_title -}}{{ . }}{{- else -}}{{ site.Title }}{{- end -}}
+  {{- else if eq .Section "lists" -}}
+    {{- $count := 0 -}}
+    {{- with .Params.books -}}{{- if reflect.IsSlice . -}}{{- $count = (len .) -}}{{- end -}}{{- end -}}
+    {{- if gt $count 0 -}}
+      {{- printf "%s-%d本书单-%s" .Title $count site.Title -}}
+    {{- else -}}
+      {{- printf "%s-书单-%s" .Title site.Title -}}
+    {{- end -}}
+  {{- else if eq .Section "books" -}}
+    {{- $author := "" -}}
+    {{- with .Params.author -}}{{- $author = . -}}{{- end -}}
+    {{- if not $author -}}
+      {{- with .Params.authors -}}
+        {{- if reflect.IsSlice . -}}{{- $author = (delimit . "、") -}}{{- else -}}{{- $author = . -}}{{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $author -}}
+      {{- printf "%s-%s-%s" .Title $author site.Title -}}
+    {{- else -}}
+      {{- printf "%s-%s" .Title site.Title -}}
+    {{- end -}}
+  {{- else -}}
+    {{- printf "%s-%s" .Title site.Title -}}
+  {{- end -}}</title>
+
+  {{/* SEO Description 优先级：seo_description > .Description > summary > site.Params.description */}}
+  {{- $desc := "" -}}
+  {{- with .Params.seo_description -}}{{- $desc = . -}}{{- end -}}
+  {{- if not $desc -}}{{- with .Description -}}{{- $desc = . -}}{{- end -}}{{- end -}}
+  {{- if not $desc -}}{{- with .Params.summary -}}{{- $desc = . -}}{{- end -}}{{- end -}}
+  {{- if not $desc -}}{{- with site.Params.description -}}{{- $desc = . -}}{{- end -}}{{- end -}}
+
+  <meta name="description" content="{{- $desc | plainify | htmlEscape -}}">
+
+  {{/* ===== Robots / Noindex 控制 =====
+      优先级：
+      1) 页面 front matter: robots: "noindex, nofollow"
+      2) /search/（section=search）自动 noindex
+      3) 其他页面不输出（让搜索引擎自行判断）
+  */}}
+  {{- $robots := "" -}}
+  {{- with .Params.robots -}}{{- $robots = . -}}{{- end -}}
+  {{- if not $robots -}}
+    {{- if eq .Section "search" -}}
+      {{- $robots = "noindex, nofollow" -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if $robots -}}
+    <meta name="robots" content="{{- $robots -}}">
+  {{- end -}}
+
+  {{/* 可选：搜索页 canonical 固定到 /search/，避免 ?q=xxx 被当成无限多 URL */}}
+  {{- if eq .Section "search" -}}
+    <link rel="canonical" href="{{ "/search/" | absURL }}">
+  {{- end -}}
+
+  {{/* ===== Open Graph / Twitter Card ===== */}}
+  {{- $ogTitle := "" -}}
+  {{- if .IsHome -}}
+    {{- with site.Params.home_title -}}{{- $ogTitle = . -}}{{- else -}}{{- $ogTitle = site.Title -}}{{- end -}}
+  {{- else if eq .Section "lists" -}}
+    {{- $count := 0 -}}
+    {{- with .Params.books -}}{{- if reflect.IsSlice . -}}{{- $count = (len .) -}}{{- end -}}{{- end -}}
+    {{- if gt $count 0 -}}
+      {{- $ogTitle = printf "%s-%d本书单-%s" .Title $count site.Title -}}
+    {{- else -}}
+      {{- $ogTitle = printf "%s-书单-%s" .Title site.Title -}}
+    {{- end -}}
+  {{- else if eq .Section "books" -}}
+    {{- $author := "" -}}
+    {{- with .Params.author -}}{{- $author = . -}}{{- end -}}
+    {{- if not $author -}}
+      {{- with .Params.authors -}}
+        {{- if reflect.IsSlice . -}}{{- $author = (delimit . "、") -}}{{- else -}}{{- $author = . -}}{{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $author -}}
+      {{- $ogTitle = printf "%s-%s-%s" .Title $author site.Title -}}
+    {{- else -}}
+      {{- $ogTitle = printf "%s-%s" .Title site.Title -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $ogTitle = printf "%s-%s" .Title site.Title -}}
+  {{- end -}}
+
+  {{- $ogDesc := $desc | plainify | htmlEscape -}}
+  {{- $ogURL := .Permalink -}}
+
+  {{- $img := "" -}}
+  {{- with .Params.og_image -}}{{- $img = . -}}{{- end -}}
+  {{- if not $img -}}{{- with .Params.cover -}}{{- $img = . -}}{{- end -}}{{- end -}}
+  {{- if not $img -}}{{- with site.Params.default_og_image -}}{{- $img = . -}}{{- end -}}{{- end -}}
+
+  <meta property="og:site_name" content="{{- site.Title -}}">
+  <meta property="og:title" content="{{- $ogTitle -}}">
+  <meta property="og:description" content="{{- $ogDesc -}}">
+  <meta property="og:url" content="{{- $ogURL -}}">
+  <meta property="og:type" content="{{- if .IsHome -}}website{{- else -}}article{{- end -}}">
+
+  {{- if $img -}}
+    <meta property="og:image" content="{{- $img | absURL -}}">
+  {{- end -}}
+
+  <meta name="twitter:card" content="{{- if $img -}}summary_large_image{{- else -}}summary{{- end -}}">
+  <meta name="twitter:title" content="{{- $ogTitle -}}">
+  <meta name="twitter:description" content="{{- $ogDesc -}}">
+  {{- if $img -}}
+    <meta name="twitter:image" content="{{- $img | absURL -}}">
+  {{- end -}}
+
+  <link rel="stylesheet" href="{{ "css/main.css" | relURL }}?v=1">
+  <script async src="https://umami.xxx.com/script.js" data-website-id="4905755f-68b9-44b8-a04c-ff50c56b3e3f"></script>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ "/" | relURL }}" aria-label="{{ site.Title }}">
+        <img class="brand-mark" src="{{ "favicon.svg" | relURL }}" alt="" width="20" height="20" loading="eager" decoding="async">
+        <span class="brand-name">{{ site.Title }}</span>
+      </a>
+
+      <nav class="topnav" aria-label="主导航">
+        <a href="{{ "/lists/" | relURL }}">书单</a>
+        <a href="{{ "/books/" | relURL }}">图书</a>
+        <a href="{{ "/tags/"  | relURL }}">标签</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page">
+    {{ block "main" . }}{{ end }}
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>© {{ now.Format "2006" }} {{ site.Title }}</span>
+      <span class="dot">·</span>
+      <a href="{{ "/disclaimer/" | relURL }}">免责声明</a>
+      <span class="dot">·</span>
+      <a href="{{ "/index.xml" | relURL }}">RSS</a>
+    </div>
+  </footer>
+
+  {{ block "scripts" . }}{{ end }}
+</body>
+</html>

@@ -1,0 +1,69 @@
+{{ define "main" }}
+<article class="article">
+  <header class="article-head">
+
+   <div class="cover-hero">
+      {{ with .Params.cover }}
+        <img loading="lazy" src="{{ . | relURL }}" alt="{{ $.Title }}">
+      {{ else }}
+        <div class="ph tall"></div>
+      {{ end }}
+    </div>
+
+    <h1 class="article-title">{{ .Title }}</h1>
+    {{ with .Params.summary }}<p class="article-lead">{{ . }}</p>{{ end }}
+
+    <div class="meta">
+      {{ if .Date }}<span class="meta-item">{{ .Date.Format "2006-01-02" }}</span>{{ end }}
+      {{ with .Params.tags }}
+        <span class="meta-sep">·</span>
+        <span class="meta-item">{{ delimit . " · " }}</span>
+      {{ end }}
+    </div>
+
+  </header>
+
+  <div class="article-body prose">
+    {{ .Content }}
+  </div>
+
+  <section class="subsection" aria-label="书单内图书">
+    <div class="section-head">
+      <h2>这份书单包含</h2>
+      {{ with .Params.books }}<span class="count">{{ len . }} 本</span>{{ end }}
+    </div>
+
+    <div class="list">
+      {{ $ids := .Params.books | default (slice) }}
+      {{ range $i, $slug := $ids }}
+        {{ $p := site.GetPage (printf "books/%s" $slug) }}
+        {{ if $p }}
+          <a class="row" href="{{ $p.RelPermalink }}">
+            <div class="row-cover">
+              {{ with $p.Params.cover }}
+                <img loading="lazy" src="{{ . | relURL }}" alt="{{ $p.Title }}">
+              {{ else }}
+                <div class="ph" aria-hidden="true"></div>
+              {{ end }}
+            </div>
+
+            <div class="row-main">
+              <div class="row-title">{{ add $i 1 }}. {{ $p.Title }}</div>
+              {{ with $p.Params.author }}<div class="row-sub">{{ . }}</div>{{ end }}
+              {{ with $p.Params.summary }}<div class="row-desc">{{ . }}</div>{{ end }}
+              <div class="row-meta">
+                {{ with $p.Params.tags }}
+                  {{ if ge (len .) 1 }}<span class="pill">{{ index . 0 }}</span>{{ end }}
+                {{ end }}
+              </div>
+            </div>
+
+            <div class="row-arrow" aria-hidden="true">›</div>
+          </a>
+        {{ end }}
+      {{ end }}
+    </div>
+  </section>
+</article>
+{{ end }}
+

@@ -1,0 +1,16 @@
+# Hugo build output
+/public/
+/resources/_gen/
+
+# Hugo lock
+.hugo_build.lock
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# Zip files
+*.zip

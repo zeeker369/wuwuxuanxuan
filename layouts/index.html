@@ -1,0 +1,69 @@
+{{ define "main" }}
+<section class="hero">
+  <h1 class="hero-title">阅读不是答案，是方向。</h1>
+  <p class="hero-subtitle">8 个问题，8 站书单与笔记，陪你把情绪放回现实里。</p>
+
+  <form class="search" action="{{ "/search/" | relURL }}" method="get">
+    <label class="sr-only" for="q">搜索书单或图书</label>
+    <input id="q" name="q" class="search-input" type="search"
+           placeholder="搜索：书名 / 书单 / 标签" autocomplete="off">
+    <button id="clear" class="search-clear" type="button" aria-label="清空">×</button>
+  </form>
+</section>
+
+<!-- ✅ 首页推荐（始终显示；搜索会跳转到 /search/） -->
+<section class="feed" aria-label="推荐书单">
+  <div class="section-head">
+    <h2>推荐书单</h2>
+    <a class="more" href="{{ "/lists/" | relURL }}">全部</a>
+  </div>
+
+  <div id="cards" class="cards">
+    {{ range (where site.RegularPages "Section" "lists") }}
+      <article class="card">
+        <a class="card-link" href="{{ .RelPermalink }}">
+          <div class="card-cover">
+            {{ $c := .Params.cover }}
+            {{ if $c }}
+              <img loading="lazy" src="{{ $c | relURL }}" alt="{{ .Title }}">
+            {{ else }}
+              <div class="ph"></div>
+            {{ end }}
+          </div>
+
+          <div class="card-body">
+            <h3 class="card-title">{{ .Title }}</h3>
+            {{ with .Params.summary }}<p class="card-summary">{{ . }}</p>{{ end }}
+
+            <div class="meta">
+              <span class="meta-item">{{ .Date.Format "2006-01-02" }}</span>
+              {{ with .Params.tags }}
+                <span class="meta-sep">·</span>
+                <span class="meta-item">{{ index . 0 }}</span>
+              {{ end }}
+            </div>
+          </div>
+        </a>
+      </article>
+    {{ end }}
+  </div>
+</section>
+{{ end }}
+
+{{ define "scripts" }}
+<script>
+(function(){
+  const q = document.getElementById('q');
+  const clear = document.getElementById('clear');
+  if(!q || !clear) return;
+
+  function sync(){
+    clear.style.visibility = q.value ? 'visible' : 'hidden';
+  }
+
+  q.addEventListener('input', sync, {passive:true});
+  clear.addEventListener('click', ()=>{ q.value=''; q.focus(); sync(); });
+  sync();
+})();
+</script>
+{{ end }}

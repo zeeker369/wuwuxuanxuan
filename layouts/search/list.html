@@ -1,0 +1,52 @@
+{{ define "main" }}
+<main style="padding:24px;max-width:900px;margin:0 auto;">
+  <h1 style="margin:0 0 12px 0;">搜索</h1>
+
+  <input
+    id="q"
+    placeholder="试试：低谷 / 独处 / 家庭 / 斯通纳"
+    autocomplete="off"
+    style="width:100%;padding:12px 14px;border:1px solid rgba(0,0,0,.18);border-radius:12px;outline:none;font-size:16px;"
+  />
+
+  <div id="meta" style="margin:10px 2px;color:rgba(0,0,0,.55);font-size:13px;"></div>
+  <div id="results" style="margin-top:14px;"></div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.6.2/dist/fuse.min.js"></script>
+<script src="/js/search.js"></script>
+
+<script>
+(function () {
+  const input = document.getElementById("q");
+  if (!input) return;
+
+  // /search/?q=xxx 自动回填
+  const params = new URLSearchParams(location.search);
+  const q = params.get("q");
+  if (q) {
+    input.value = q;
+    // 触发你的 search.js 监听（input 事件）
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  // Ctrl+K / Cmd+K 聚焦搜索框；Esc 清空
+  window.addEventListener("keydown", (e) => {
+    const isMac = navigator.platform.toLowerCase().includes("mac");
+    const mod = isMac ? e.metaKey : e.ctrlKey;
+
+    if (mod && (e.key === "k" || e.key === "K")) {
+      e.preventDefault();
+      input.focus();
+      input.select();
+      return;
+    }
+
+    if (e.key === "Escape") {
+      input.value = "";
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  });
+})();
+</script>
+{{ end }}

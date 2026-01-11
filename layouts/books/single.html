@@ -1,0 +1,197 @@
+{{ define "main" }}
+<article class="article">
+  <header class="article-head bookhead">
+    <div class="book-hero">
+      <div class="book-cover">
+        {{ with .Params.cover }}
+          <img loading="lazy" src="{{ . | relURL }}" alt="{{ $.Title }}">
+        {{ else }}
+          <div class="ph tall"></div>
+        {{ end }}
+      </div>
+
+      <div class="book-info">
+        <h1 class="article-title">{{ .Title }}</h1>
+
+        <div class="book-sub">
+          {{ with .Params.author }}<span>{{ . }}</span>{{ end }}
+          {{ with .Params.isbn }}{{ if ne . "" }}<span class="dot">·</span><span>ISBN {{ . }}</span>{{ end }}{{ end }}
+        </div>
+
+        {{ with .Params.summary }}
+          <p class="article-lead">{{ . }}</p>
+        {{ end }}
+
+        {{/* ===== 购买入口：只取一个“京东”链接（优先 jd.com / u.jd.com）===== */}}
+        {{- $jdURL := "" -}}
+        {{- $buy := .Params.buy -}}
+
+        {{- if $buy -}}
+          {{- if reflect.IsMap $buy -}}
+            {{- $enabled := true -}}
+            {{- with (index $buy "enabled") -}}{{- if not . -}}{{- $enabled = false -}}{{- end -}}{{- end -}}
+            {{- if $enabled -}}
+              {{- $links := (index $buy "links") -}}
+              {{- if and $links (reflect.IsSlice $links) -}}
+                {{- range $links -}}
+                  {{- if not $jdURL -}}
+                    {{- $u := "" -}}
+                    {{- $n := "" -}}
+                    {{- if reflect.IsMap . -}}
+                      {{- with (index . "url") -}}{{- $u = printf "%v" . -}}{{- end -}}
+                      {{- with (index . "name") -}}{{- $n = printf "%v" . -}}{{- end -}}
+                    {{- else -}}
+                      {{- $u = printf "%v" . -}}
+                    {{- end -}}
+                    {{- $lu := lower $u -}}
+                    {{- if and $u (or (strings.Contains $lu "jd.com") (strings.Contains $lu "u.jd.com") (strings.Contains (lower $n) "京东")) -}}
+                      {{- $jdURL = $u -}}
+                    {{- end -}}
+                  {{- end -}}
+                {{- end -}}
+
+                {{- if and (not $jdURL) (gt (len $links) 0) -}}
+                  {{- $first := index $links 0 -}}
+                  {{- if reflect.IsMap $first -}}
+                    {{- with (index $first "url") -}}{{- $jdURL = printf "%v" . -}}{{- end -}}
+                  {{- else -}}
+                    {{- $jdURL = printf "%v" $first -}}
+                  {{- end -}}
+                {{- end -}}
+              {{- else -}}
+                {{- with (index $buy "url") -}}{{- $jdURL = printf "%v" . -}}{{- end -}}
+              {{- end -}}
+            {{- end -}}
+
+          {{- else if reflect.IsSlice $buy -}}
+            {{- range $buy -}}
+              {{- if not $jdURL -}}
+                {{- $u := "" -}}
+                {{- $n := "" -}}
+                {{- if reflect.IsMap . -}}
+                  {{- with (index . "url") -}}{{- $u = printf "%v" . -}}{{- end -}}
+                  {{- with (index . "name") -}}{{- $n = printf "%v" . -}}{{- end -}}
+                {{- else -}}
+                  {{- $u = printf "%v" . -}}
+                {{- end -}}
+                {{- $lu := lower $u -}}
+                {{- if and $u (or (strings.Contains $lu "jd.com") (strings.Contains $lu "u.jd.com") (strings.Contains (lower $n) "京东")) -}}
+                  {{- $jdURL = $u -}}
+                {{- end -}}
+              {{- end -}}
+            {{- end -}}
+
+            {{- if and (not $jdURL) (gt (len $buy) 0) -}}
+              {{- $first := index $buy 0 -}}
+              {{- if reflect.IsMap $first -}}
+                {{- with (index $first "url") -}}{{- $jdURL = printf "%v" . -}}{{- end -}}
+              {{- else -}}
+                {{- $jdURL = printf "%v" $first -}}
+              {{- end -}}
+            {{- end -}}
+
+          {{- else -}}
+            {{- $jdURL = printf "%v" $buy -}}
+          {{- end -}}
+        {{- end -}}
+
+        {{/* ===== 标签 + 购买（购买在标签下面右下方）===== */}}
+        <div class="chips-buy">
+          {{ with .Params.tags }}
+            <div class="chips chips-compact">
+              {{ range . }}
+                <a class="chip chip-compact" href="{{ (printf "/tags/%s/" (urlize .)) | relURL }}">{{ . }}</a>
+              {{ end }}
+            </div>
+          {{ end }}
+
+          {{- if $jdURL -}}
+            <div class="buy-inline" aria-label="购买入口">
+              <a class="jd-pill" href="{{ $jdURL }}" target="_blank" rel="nofollow noopener sponsored">
+                前往京东商城购买
+              </a>
+            </div>
+          {{- end -}}
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <div class="article-body prose">
+    {{ .Content }}
+
+    {{ with .Params.read_position }}
+      <section class="book-l2">
+        <h2>什么时候读这本书</h2>
+        <p>{{ . }}</p>
+      </section>
+    {{ end }}
+
+    {{ with .Params.recommend_reasons }}
+      <section class="book-l2">
+        <h2>为什么推荐</h2>
+        <ul>{{ range . }}<li>{{ . }}</li>{{ end }}</ul>
+      </section>
+    {{ end }}
+
+    {{ with .Params.not_for }}
+      <section class="book-l2">
+        <h2>它不会做什么</h2>
+        <ul>{{ range . }}<li>{{ . }}</li>{{ end }}</ul>
+      </section>
+    {{ end }}
+
+    {{ with .Params.for_readers }}
+      <section class="book-l2">
+        <h2>适合哪些读者</h2>
+        <ul>{{ range . }}<li>{{ . }}</li>{{ end }}</ul>
+      </section>
+    {{ end }}
+
+    {{ with .Params.reading_notice }}
+      <section class="book-l2">
+        <h2>阅读提醒</h2>
+        <p>{{ . }}</p>
+      </section>
+    {{ end }}
+
+    {{ with .Params.quotes }}
+      <section class="book-l2">
+        <h2>书中句子</h2>
+        <ul>{{ range . }}<li>“{{ . }}”</li>{{ end }}</ul>
+      </section>
+    {{ end }}
+  </div>
+
+  <section class="subsection" aria-label="关联书单">
+    <div class="section-head">
+      <h2>收录于</h2>
+    </div>
+
+    <div class="cards">
+      {{ $me := .File.BaseFileName }}
+      {{ range (where site.RegularPages "Section" "lists") }}
+        {{ $ids := .Params.books | default (slice) }}
+        {{ if in $ids $me }}
+          <article class="card">
+            <a class="card-link" href="{{ .RelPermalink }}">
+              <div class="card-cover small">
+                {{ with .Params.cover }}
+                  <img loading="lazy" src="{{ . | relURL }}" alt="{{ $.Title }}">
+                {{ else }}
+                  <div class="ph"></div>
+                {{ end }}
+              </div>
+              <div class="card-body">
+                <h3 class="card-title">{{ .Title }}</h3>
+                {{ with .Params.summary }}<p class="card-summary">{{ . }}</p>{{ end }}
+              </div>
+            </a>
+          </article>
+        {{ end }}
+      {{ end }}
+    </div>
+  </section>
+</article>
+{{ end }}

@@ -1,0 +1,20 @@
+{{ define "main" }}
+<section class="notfound">
+  <div class="nf-card">
+    <div class="nf-kicker">404 / NOT FOUND</div>
+    <h1 class="nf-title">这页不在这里了</h1>
+    <p class="nf-desc">
+      可能是链接写错了，也可能是内容已经移动。你可以回到首页，或去书单/图书/标签继续浏览。
+    </p>
+
+    <div class="nf-actions">
+      <a class="btn btn-primary" href="{{ "/" | relURL }}">返回首页</a>
+      <a class="btn" href="{{ "/lists/" | relURL }}">书单</a>
+      <a class="btn" href="{{ "/books/" | relURL }}">图书</a>
+      <a class="btn" href="{{ "/tags/" | relURL }}">标签</a>
+    </div>
+
+    <div class="nf-note">慢慢找也没关系。页面不在，但你还在路上。</div>
+  </div>
+</section>
+{{ end }}

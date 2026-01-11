@@ -1,0 +1,40 @@
+{{- $pages := .Pages -}}
+{{- if .IsHome -}}
+  {{- $pages = site.RegularPages -}}
+{{- end -}}
+{{- $pages = where $pages "Params.hidden" "ne" true -}}
+{{- $pages = $pages.ByLastmod.Reverse -}}
+
+{{- $limit := default 50 .Site.Config.Services.RSS.Limit -}}
+
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0">
+  <channel>
+    <title>{{ .Site.Title | plainify | htmlEscape }}</title>
+    <link>{{ .Site.BaseURL }}</link>
+    <description>{{ with .Site.Params.description }}{{ . | plainify | htmlEscape }}{{ end }}</description>
+    <language>{{ .Site.Language.Lang }}</language>
+
+    {{- $iter := $pages -}}
+    {{- if ge $limit 0 -}}
+      {{- $iter = first $limit $pages -}}
+    {{- end -}}
+
+    {{- range $iter -}}
+      {{- $desc := "" -}}
+      {{- with .Params.seo_description -}}{{- $desc = . -}}{{- end -}}
+      {{- if not $desc -}}{{- with .Params.summary -}}{{- $desc = . -}}{{- end -}}{{- end -}}
+      {{- if not $desc -}}{{- with .Summary -}}{{- $desc = . -}}{{- end -}}{{- end -}}
+      {{- if not $desc -}}{{- with .Description -}}{{- $desc = . -}}{{- end -}}{{- end -}}
+
+      <item>
+        <title>{{ .Title | plainify | htmlEscape }}</title>
+        <link>{{ .Permalink }}</link>
+        <guid>{{ .Permalink }}</guid>
+        <pubDate>{{ ((.Lastmod | default .Date) | time.Format "Mon, 02 Jan 2006 15:04:05 -0700") }}</pubDate>
+        <description>{{ $desc | plainify | htmlEscape }}</description>
+      </item>
+    {{- end -}}
+
+  </channel>
+</rss>
