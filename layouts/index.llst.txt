@@ -1,0 +1,4 @@
+{{- .Site.Home.Permalink }}
+{{ range .Site.RegularPages -}}
+{{ .Permalink }}
+{{ end -}}
